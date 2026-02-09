@@ -25,6 +25,8 @@ The skill only loads its full instructions when you actually use it.
 /plugin install jira@jira-cli-skill
 ```
 
+Restart Claude Code after installing for `/jira` autocomplete to work.
+
 ## Usage
 
 The skill activates automatically when you ask Claude Code about Jira tasks. You can also invoke it directly with `/jira`.
