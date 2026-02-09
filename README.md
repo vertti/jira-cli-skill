@@ -19,6 +19,9 @@ The skill only loads its full instructions when you actually use it.
 
 ```
 /plugin marketplace add vertti/jira-cli-skill
+```
+
+```
 /plugin install jira@jira-cli-skill
 ```
 
