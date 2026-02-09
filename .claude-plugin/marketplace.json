@@ -1,0 +1,25 @@
+{
+  "name": "jira-cli-skill",
+  "owner": {
+    "name": "vertti"
+  },
+  "metadata": {
+    "description": "Jira CLI skill for Claude Code using Atlassian CLI (acli)",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "jira",
+      "source": "./plugins/jira",
+      "description": "Search, create, update, and manage Jira tickets/issues using the Atlassian CLI",
+      "version": "2.3.0",
+      "author": {
+        "name": "vertti"
+      },
+      "license": "MIT",
+      "keywords": ["jira", "atlassian", "acli", "project-management"],
+      "category": "development"
+    }
+  ]
+}
