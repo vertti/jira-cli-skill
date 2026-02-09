@@ -1,0 +1,6 @@
+{
+  "name": "jira",
+  "description": "Search, create, update, and manage Jira tickets/issues using the Atlassian CLI",
+  "version": "2.3.0",
+  "skills": "./skills/"
+}
