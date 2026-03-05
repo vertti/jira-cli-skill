@@ -1,12 +1,18 @@
 ---
 name: jira
 description: Use this skill when the user asks to search, create, update, or manage Jira tickets/issues. Provides ACLI command patterns for Jira operations.
-version: 2.3.0
+version: 2.4.0
 ---
 
 # Jira CLI Skill
 
 Use the Atlassian CLI (acli) for Jira operations. Reference: https://developer.atlassian.com/cloud/acli/reference/commands/jira/
+
+## Rules
+
+- **Never guess flags or JSON format.** Use ONLY the exact syntax documented in this skill file. If a flag/format isn't documented here, run `acli jira workitem create --help` (or the relevant subcommand) to check before executing.
+- **Never retry a failed command with a guessed variation.** If a command fails, read the error message, check this skill file or `--help`, then fix. Do not trial-and-error.
+- **Never combine `--from-json` with CLI flags** like `--parent`, `--component`, etc. — CLI flags are silently ignored when using JSON input.
 
 ## First Step: Bootstrap
 
@@ -84,6 +90,44 @@ acli jira workitem create --from-json /tmp/ticket.json --json
 - Do NOT combine `--from-json` with CLI flags like `--parent` (flags are ignored when using JSON)
 - Description in JSON must be Atlassian Document Format (ADF), not plain text
 - Use `--generate-json` to get an example JSON template
+
+### Batch Create (Epic + Child Tickets)
+When creating an epic with multiple child tickets, use this pattern:
+1. Create the epic first, capture its key from the output
+2. Create child tickets one at a time using `--parent`
+3. Use `--from-json` only when components or other advanced fields are needed
+
+```bash
+# 1. Create epic
+acli jira workitem create --project PROJ --type Epic \
+  --summary "Epic title" --description "Epic description" --json
+
+# 2. Create child tickets (use the epic key from step 1)
+acli jira workitem create --project PROJ --type Task \
+  --summary "Child ticket 1" --description "Description" \
+  --parent PROJ-100
+
+# 3. If components needed, use JSON for children
+cat > /tmp/ticket.json << 'EOF'
+{
+  "projectKey": "PROJ",
+  "type": "Task",
+  "summary": "Child with component",
+  "description": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {"type": "paragraph", "content": [{"type": "text", "text": "Description."}]}
+    ]
+  },
+  "additionalAttributes": {
+    "parent": {"key": "PROJ-100"},
+    "components": [{"name": "ComponentName"}]
+  }
+}
+EOF
+acli jira workitem create --from-json /tmp/ticket.json --json
+```
 
 ### Edit
 ```bash
@@ -197,3 +241,16 @@ Always scope JQL with a project or assignee filter - unbounded queries are not a
 | `--editor` / `-e` | Open text editor for input |
 | `--ignore-errors` | Continue on errors (bulk ops) |
 | `--description-file` | Read description from file |
+
+## Anti-Patterns (Do NOT Do These)
+
+| Wrong | Right | Why |
+|-------|-------|-----|
+| `--output json` | `--json` | Wrong flag name |
+| `--file ticket.json` | `--from-json ticket.json` | Wrong flag name |
+| `--from-json ... --parent PROJ-100` | Put parent inside JSON `additionalAttributes` | CLI flags ignored with `--from-json` |
+| `"parentIssueId": "PROJ-100"` in JSON | `"additionalAttributes": {"parent": {"key": "PROJ-100"}}` | `parentIssueId` only works for subtasks |
+| `"parent": "PROJ-100"` in JSON | `"additionalAttributes": {"parent": {"key": "PROJ-100"}}` | Must be nested object with `key` |
+| `"components": ["Name"]` in JSON | `"components": [{"name": "Name"}]` inside `additionalAttributes` | Must be array of objects |
+| `--fields '*all' --json` | `--fields "summary,status,parent" --json` | `*all` returns ~22KB of null fields |
+| Guessing a flag variation after failure | Run `acli jira workitem <cmd> --help` | Don't trial-and-error |
